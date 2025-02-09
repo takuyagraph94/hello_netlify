@@ -1,17 +1,15 @@
-// script.js
+// グローバル変数として一度だけ宣言
+let scene, camera, renderer, dice;
 
-let scene, camera, renderer;
-let dice; // サイコロモデルを格納する変数
-
+// 初期化とアニメーションを呼び出し
 init();
 animate();
 
-// 初期化
 function init() {
-  // シーンを作成
+  // シーン作成
   scene = new THREE.Scene();
 
-  // カメラ
+  // カメラ作成 (視野角, アスペクト比, near, far)
   camera = new THREE.PerspectiveCamera(
     60,
     window.innerWidth / window.innerHeight,
@@ -23,58 +21,44 @@ function init() {
   // レンダラー
   renderer = new THREE.WebGLRenderer({ antialias: true });
   renderer.setSize(window.innerWidth, window.innerHeight);
-  // bodyにcanvasを追加
   document.body.appendChild(renderer.domElement);
 
-  // 簡単なライト（環境光）
-  const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+  // 簡単なライト
+  const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
   scene.add(ambientLight);
 
-  // 方向光（太陽光イメージ）
   const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
   directionalLight.position.set(5, 10, 5);
   scene.add(directionalLight);
 
-  // 背景をちょっと暗い色に
-  scene.background = new THREE.Color(0x333333);
-
-  // ウィンドウリサイズ対応
+  // ウィンドウのリサイズ対応
   window.addEventListener('resize', onWindowResize);
 
-  // GLTFLoaderでdice.glbを読み込み
-  const loader = new THREE.GLTFLoader();
-  loader.load(
-    'assets/dice.glb', // モデルファイルのパス（index.htmlからの相対パス）
-    (gltf) => {
-      dice = gltf.scene;
-      // サイコロの大きさや位置を調整
-      dice.scale.set(1, 1, 1);
-      dice.position.set(0, 0, 0);
-      scene.add(dice);
-    },
-    undefined,
-    (error) => {
-      console.error('Failed to load dice model:', error);
-    }
-  );
+  // (必要に応じてモデルを読み込む例)
+  // const loader = new THREE.GLTFLoader();
+  // loader.load('assets/dice.glb', (gltf) => {
+  //   dice = gltf.scene;
+  //   scene.add(dice);
+  // });
+
+  // 背景色を設定 (見やすさのため)
+  scene.background = new THREE.Color(0x222222);
 }
 
-// ウィンドウリサイズ時
 function onWindowResize() {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
 }
 
-// アニメーションループ
 function animate() {
   requestAnimationFrame(animate);
 
-  // diceが読み込まれていたら少し回転させてみる
-  if (dice) {
-    dice.rotation.x += 0.01;
-    dice.rotation.y += 0.02;
-  }
+  // もしdiceが読み込まれていれば回転させる例
+  // if (dice) {
+  //   dice.rotation.x += 0.01;
+  //   dice.rotation.y += 0.01;
+  // }
 
   renderer.render(scene, camera);
 }
