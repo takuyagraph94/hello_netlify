@@ -1,15 +1,14 @@
-// グローバル変数として一度だけ宣言
-let scene, camera, renderer, dice;
+// グローバル変数を一度だけ宣言
+let scene, camera, renderer, cube;
 
-// 初期化とアニメーションを呼び出し
 init();
 animate();
 
 function init() {
-  // シーン作成
+  // シーンを作成
   scene = new THREE.Scene();
 
-  // カメラ作成 (視野角, アスペクト比, near, far)
+  // カメラ
   camera = new THREE.PerspectiveCamera(
     60,
     window.innerWidth / window.innerHeight,
@@ -23,26 +22,35 @@ function init() {
   renderer.setSize(window.innerWidth, window.innerHeight);
   document.body.appendChild(renderer.domElement);
 
-  // 簡単なライト
-  const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+  // ライト
+  const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
   scene.add(ambientLight);
 
   const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
   directionalLight.position.set(5, 10, 5);
   scene.add(directionalLight);
 
-  // ウィンドウのリサイズ対応
+  // テスト用の赤い立方体
+  const geometry = new THREE.BoxGeometry(1, 1, 1);
+  const material = new THREE.MeshStandardMaterial({ color: 0xff0000 });
+  cube = new THREE.Mesh(geometry, material);
+  scene.add(cube);
+
+  // リサイズイベント
   window.addEventListener('resize', onWindowResize);
 
-  // (必要に応じてモデルを読み込む例)
-  // const loader = new THREE.GLTFLoader();
-  // loader.load('assets/dice.glb', (gltf) => {
-  //   dice = gltf.scene;
-  //   scene.add(dice);
-  // });
+  // 背景色
+  scene.background = new THREE.Color(0x333333);
 
-  // 背景色を設定 (見やすさのため)
-  scene.background = new THREE.Color(0x222222);
+  /*
+  // サイコロモデル（dice.glb）を読み込みたい場合は下記をアンコメント
+  const loader = new THREE.GLTFLoader();
+  loader.load('assets/dice.glb', (gltf) => {
+    const diceModel = gltf.scene;
+    diceModel.position.set(2, 0, 0); // 右側に表示
+    scene.add(diceModel);
+  });
+  */
 }
 
 function onWindowResize() {
@@ -54,11 +62,9 @@ function onWindowResize() {
 function animate() {
   requestAnimationFrame(animate);
 
-  // もしdiceが読み込まれていれば回転させる例
-  // if (dice) {
-  //   dice.rotation.x += 0.01;
-  //   dice.rotation.y += 0.01;
-  // }
+  // 立方体を回転させる
+  cube.rotation.x += 0.01;
+  cube.rotation.y += 0.02;
 
   renderer.render(scene, camera);
 }
