@@ -2,21 +2,24 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>Three.js Scene Example</title>
+  <title>Three.js Demo</title>
   <style>
     body {
       margin: 0;
       background: #222;
       color: #fff;
-      overflow: hidden; /* 画面全体に3D表示する想定 */
+      overflow: hidden; /* 全画面に3Dを表示する想定 */
     }
   </style>
 </head>
 <body>
-  <!-- Three.js本体 → GLTFLoader → 自作script.js の順に読み込む -->
+
+  <!-- 1) Three.js本体 -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r152/three.min.js"></script>
+  <!-- 2) GLTFLoader (Three.jsの追加プラグイン) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r152/examples/js/loaders/GLTFLoader.js"></script>
-  
+  <!-- 3) 自作スクリプト。最後に読み込むことで「THREE is not defined」を防ぐ -->
   <script src="script.js"></script>
+
 </body>
 </html>
