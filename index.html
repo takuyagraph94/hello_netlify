@@ -1,268 +1,35 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8" />
-  <title>Dice Game - Harlem Street Style</title>
+  <meta charset="UTF-8">
+  <title>3D Dice Test</title>
   <style>
     body {
       margin: 0;
-      padding: 0;
-      background: #222; /* ダークな背景（街の夜のイメージ） */
-      color: #eee;
-      font-family: sans-serif;
-      text-align: center;
-    }
-    header {
-      padding: 20px;
       background: #333;
-      margin-bottom: 10px;
-    }
-    h1 {
-      margin: 0;
-      font-size: 1.8rem;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-    }
-    .container {
-      max-width: 600px;
-      margin: 0 auto;
-    }
-    .characters {
-      display: flex;
-      justify-content: space-around;
-      align-items: center;
-      margin-bottom: 20px;
-    }
-    .character {
-      width: 40%;
-    }
-    .character img {
-      max-width: 100%;
-      border: 2px solid #444;
-    }
-    .round-info, .result-info {
-      margin: 10px 0;
-      font-size: 1.2rem;
-      min-height: 30px;
-    }
-    .dice-result {
-      font-size: 1.5rem;
-      font-weight: bold;
-      margin: 15px 0;
-    }
-    .buttons {
-      margin-bottom: 20px;
-    }
-    button {
-      background: #444;
-      color: #eee;
-      border: none;
-      padding: 10px 20px;
-      margin: 5px;
-      cursor: pointer;
-      font-size: 1rem;
-    }
-    button:hover {
-      background: #666;
-    }
-    .final-message {
-      font-size: 2rem;
-      font-weight: bold;
-      margin-top: 30px;
-      color: #ff5;
-    }
-    /* 簡易的に3,2,1...GO!!を表示するためのオーバーレイ */
-    .countdown-overlay {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: rgba(0,0,0,0.8);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      z-index: 999;
-      font-size: 4rem;
       color: #fff;
-      opacity: 0;
-      transition: opacity 0.3s;
-      pointer-events: none;
+      overflow: hidden; /* 3D全画面表示を想定 */
     }
-    .countdown-overlay.show {
-      opacity: 1;
-      pointer-events: auto;
+    #info {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: rgba(0,0,0,0.5);
+      padding: 5px 10px;
+      border-radius: 5px;
     }
   </style>
+  <!-- Three.js本体をCDNから読み込み -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r152/three.min.js"></script>
+  <!-- GLTFLoaderをCDNで読み込み -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r152/examples/js/loaders/GLTFLoader.js"></script>
 </head>
 <body>
+  <div id="info">3D Dice Rolling Demo</div>
 
-<header>
-  <h1>Dice Game in Harlem</h1>
-</header>
+  <!-- 3D描画先のcanvasはJS側で自動生成するので特にHTMLタグは不要 -->
 
-<div class="container">
-  <!-- キャラクター紹介部分 -->
-  <div class="characters">
-    <div class="character" id="player-character">
-      <!-- 実際にはタトゥー腕の画像をお好みで差し替えてください -->
-      <img src="https://via.placeholder.com/200x200/666/fff?text=1P+Gangster+Tattoo" 
-           alt="1P with Gangster Tattoo"/>
-      <div>1P (You)</div>
-    </div>
-    <div class="character" id="cpu-character">
-      <!-- Notorious B.I.G風の画像をお好みで差し替えてください -->
-      <img src="https://via.placeholder.com/200x200/333/fff?text=CPU+Notorious+BIG" 
-           alt="CPU Notorious B.I.G Style"/>
-      <div>CPU</div>
-    </div>
-  </div>
-
-  <!-- ラウンド数や勝敗状況を表示するエリア -->
-  <div class="round-info" id="round-info">Round: 1</div>
-  <div class="result-info" id="result-info">
-    <!-- ここに「Win!!」や「Lose」等のラウンド結果を表示 -->
-  </div>
-  
-  <!-- 出た目を表示するエリア -->
-  <div class="dice-result" id="dice-result">Let's Roll!</div>
-
-  <!-- ボタン群 -->
-  <div class="buttons">
-    <button id="rollButton">Roll Dice</button>
-    <button id="resetButton" style="display:none;">Reset Game</button>
-  </div>
-
-  <!-- ゲーム終了時のメッセージ -->
-  <div class="final-message" id="final-message"></div>
-</div>
-
-<!-- 3,2,1... GO!! オーバーレイ -->
-<div class="countdown-overlay" id="countdown-overlay"></div>
-
-<script>
-(function(){
-  // ゲームデータ
-  let round = 1;
-  let playerWins = 0;
-  let cpuWins = 0;
-  const maxRounds = 3; // 3回勝負
-
-  // HTML要素の取得
-  const roundInfo = document.getElementById('round-info');
-  const resultInfo = document.getElementById('result-info');
-  const diceResult = document.getElementById('dice-result');
-  const rollButton = document.getElementById('rollButton');
-  const resetButton = document.getElementById('resetButton');
-  const finalMessage = document.getElementById('final-message');
-  const countdownOverlay = document.getElementById('countdown-overlay');
-
-  // ボタンクリックでサイコロを振る処理
-  rollButton.addEventListener('click', () => {
-    // カウントダウン演出 → サイコロ振る
-    startCountdown(() => {
-      rollDice();
-    });
-  });
-
-  // リセットボタンの動作
-  resetButton.addEventListener('click', resetGame);
-
-  // サイコロを振る関数
-  function rollDice() {
-    const playerRoll = getRandomDice();
-    const cpuRoll = getRandomDice();
-
-    // 出目表示
-    diceResult.textContent = `You: ${playerRoll}  vs  CPU: ${cpuRoll}`;
-
-    // 勝敗判定
-    if (playerRoll > cpuRoll) {
-      playerWins++;
-      resultInfo.textContent = 'You Win!!';
-    } else if (cpuRoll > playerRoll) {
-      cpuWins++;
-      resultInfo.textContent = 'You Lose...';
-    } else {
-      resultInfo.textContent = 'Draw';
-    }
-
-    // 勝敗カウントを確認
-    checkGameStatus();
-  }
-
-  // ゲームの状態確認
-  function checkGameStatus() {
-    // ラウンド表示更新
-    roundInfo.textContent = `Round: ${round}`;
-
-    // 先に2勝したかどうか
-    if (playerWins === 2) {
-      // 1P先に2勝 → Winner
-      finalMessage.textContent = 'WINNER';
-      endGame();
-    } else if (cpuWins === 2) {
-      // CPU先に2勝 → Loser
-      finalMessage.textContent = 'LOSER';
-      endGame();
-    } else {
-      // まだ決着がつかない → 次ラウンドへ
-      round++;
-      if (round > maxRounds) {
-        // 全ラウンド終わっても2勝に到達しない場合
-        // （3戦で毎回ドロー、または1勝1勝1ドローなど…）
-        // シンプルに判定を追加してもよいが、今回は例外的に引き分け表記など
-        finalMessage.textContent = 'No Winner (Draw)';
-        endGame();
-      }
-    }
-  }
-
-  // ゲーム終了処理
-  function endGame() {
-    rollButton.style.display = 'none';
-    resetButton.style.display = 'inline-block';
-  }
-
-  // ゲームリセット
-  function resetGame() {
-    round = 1;
-    playerWins = 0;
-    cpuWins = 0;
-    roundInfo.textContent = 'Round: 1';
-    resultInfo.textContent = '';
-    diceResult.textContent = 'Let\'s Roll!';
-    finalMessage.textContent = '';
-    rollButton.style.display = 'inline-block';
-    resetButton.style.display = 'none';
-  }
-
-  // 1~6の乱数を取得する関数
-  function getRandomDice() {
-    return Math.floor(Math.random() * 6) + 1;
-  }
-
-  // 3,2,1... GO!! のカウントダウンを簡易表示
-  function startCountdown(callback) {
-    const countdownNumbers = ['3', '2', '1', 'GO!!'];
-    let index = 0;
-    countdownOverlay.classList.add('show');
-
-    const interval = setInterval(() => {
-      countdownOverlay.textContent = countdownNumbers[index];
-      index++;
-      if (index >= countdownNumbers.length) {
-        clearInterval(interval);
-        setTimeout(() => {
-          // カウントダウン表示OFF
-          countdownOverlay.classList.remove('show');
-          countdownOverlay.textContent = '';
-          // 実際のダイスロールへ
-          callback();
-        }, 500); 
-      }
-    }, 700); // 0.7秒ごとにカウントダウン文字を進める
-  }
-
-})();
-</script>
+  <!-- 自作のJSファイルを読み込み -->
+  <script src="script.js"></script>
 </body>
 </html>
