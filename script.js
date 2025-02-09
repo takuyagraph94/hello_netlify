@@ -1,5 +1,7 @@
-// グローバル変数を一度だけ宣言
-let scene, camera, renderer, cube;
+// グローバル変数
+let scene, camera, renderer;
+let cube;      // 赤い立方体用
+let diceModel; // .glbのサイコロモデル用
 
 init();
 animate();
@@ -8,21 +10,21 @@ function init() {
   // シーンを作成
   scene = new THREE.Scene();
 
-  // カメラ
+  // カメラ設定
   camera = new THREE.PerspectiveCamera(
     60,
     window.innerWidth / window.innerHeight,
     0.1,
     1000
   );
-  camera.position.set(0, 2, 5);
+  camera.position.set(0, 2, 8);
 
   // レンダラー
   renderer = new THREE.WebGLRenderer({ antialias: true });
   renderer.setSize(window.innerWidth, window.innerHeight);
   document.body.appendChild(renderer.domElement);
 
-  // ライト
+  // 簡単なライト
   const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
   scene.add(ambientLight);
 
@@ -30,27 +32,34 @@ function init() {
   directionalLight.position.set(5, 10, 5);
   scene.add(directionalLight);
 
-  // テスト用の赤い立方体
-  const geometry = new THREE.BoxGeometry(1, 1, 1);
-  const material = new THREE.MeshStandardMaterial({ color: 0xff0000 });
-  cube = new THREE.Mesh(geometry, material);
-  scene.add(cube);
-
-  // リサイズイベント
-  window.addEventListener('resize', onWindowResize);
-
   // 背景色
   scene.background = new THREE.Color(0x333333);
 
-  /*
-  // サイコロモデル（dice.glb）を読み込みたい場合は下記をアンコメント
+  // ===== 赤い立方体（テスト用） =====
+  const geometry = new THREE.BoxGeometry(1, 1, 1);
+  const material = new THREE.MeshStandardMaterial({ color: 0xff0000 });
+  cube = new THREE.Mesh(geometry, material);
+  cube.position.set(-2, 0, 0);  // 左側に配置
+  scene.add(cube);
+
+  // ===== dice.glbを読み込む =====
   const loader = new THREE.GLTFLoader();
-  loader.load('assets/dice.glb', (gltf) => {
-    const diceModel = gltf.scene;
-    diceModel.position.set(2, 0, 0); // 右側に表示
-    scene.add(diceModel);
-  });
-  */
+  loader.load(
+    'assets/dice.glb',   // モデルファイルのパス
+    (gltf) => {
+      diceModel = gltf.scene;
+      diceModel.position.set(2, 0, 0); // 右側に配置
+      diceModel.scale.set(1, 1, 1);    // サイズ調整（必要なら変える）
+      scene.add(diceModel);
+    },
+    undefined,
+    (error) => {
+      console.error('dice.glb 読み込み失敗:', error);
+    }
+  );
+
+  // ウィンドウリサイズ対応
+  window.addEventListener('resize', onWindowResize);
 }
 
 function onWindowResize() {
@@ -62,9 +71,17 @@ function onWindowResize() {
 function animate() {
   requestAnimationFrame(animate);
 
-  // 立方体を回転させる
-  cube.rotation.x += 0.01;
-  cube.rotation.y += 0.02;
+  // 赤い立方体を回転
+  if (cube) {
+    cube.rotation.x += 0.01;
+    cube.rotation.y += 0.02;
+  }
+
+  // サイコロモデルも回転
+  if (diceModel) {
+    diceModel.rotation.x += 0.01;
+    diceModel.rotation.y += 0.02;
+  }
 
   renderer.render(scene, camera);
 }
