@@ -2,11 +2,25 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>Three.js Minimal Test</title>
-  <style>body{margin:0;background:#333;}</style>
+  <title>Three.js Demo</title>
+  <style>
+    body {
+      margin: 0;
+      background: #222;
+      color: #fff;
+      overflow: hidden;
+    }
+  </style>
 </head>
 <body>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r152/three.min.js"></script>
+
+  <!-- Three.js本体 (v0.153.0) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.153.0/three.min.js"></script>
+  <!-- 例：GLTFLoader -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.153.0/examples/js/loaders/GLTFLoader.js"></script>
+
+  <!-- あなたのスクリプトを最後に読み込む -->
   <script src="script.js"></script>
+
 </body>
 </html>
