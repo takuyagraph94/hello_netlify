@@ -31,13 +31,9 @@
       text-align: center;
     }
     .char-box img {
-      width: 160px;  /* プレースホルダーのサイズ */
+      width: 160px;
       height: auto;
       border: 2px solid #555;
-    }
-    .score-info {
-      margin: 5px 0;
-      font-weight: bold;
     }
     .buttons {
       text-align: center;
@@ -56,32 +52,22 @@
       background: #666;
     }
 
-    /* カウントダウン用のオーバーレイ */
     .countdown-overlay {
-      position: fixed;
-      top: 0; left: 0;
+      position: fixed; top: 0; left: 0;
       width: 100%; height: 100%;
       background: rgba(0,0,0,0.8);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-size: 4rem;
-      color: #fff;
-      opacity: 0;
-      pointer-events: none;
+      display: flex; justify-content: center; align-items: center;
+      font-size: 4rem; color: #fff;
+      opacity: 0; pointer-events: none;
       transition: opacity 0.3s;
       z-index: 9999;
     }
     .countdown-overlay.show {
-      opacity: 1;
-      pointer-events: auto;
+      opacity: 1; pointer-events: auto;
     }
 
-    /* 結果表示用 */
     .result-popup {
-      position: fixed;
-      top: 30%;
-      left: 50%;
+      position: fixed; top: 30%; left: 50%;
       transform: translate(-50%, -50%);
       background: rgba(0,0,0,0.9);
       padding: 30px 50px;
@@ -91,9 +77,7 @@
       display: none;
       z-index: 99999;
     }
-    .visible {
-      display: block !important;
-    }
+    .visible { display: block !important; }
   </style>
 </head>
 <body>
@@ -103,52 +87,41 @@
 </header>
 
 <div class="info-bar">
-  <!-- ラウンドや勝敗のメッセージを表示 -->
   <div id="roundInfo">Round: 1</div>
   <div id="matchInfo">Let's Roll!</div>
 </div>
 
-<!-- キャラクター表示エリア -->
 <div class="characters">
   <div class="char-box">
-    <img src="https://via.placeholder.com/160x160/666/fff?text=1P+Gangster+Hand" alt="1P with Gangster Tattoo" />
+    <!-- 画像を placehold.co で代用 -->
+    <img src="https://placehold.co/160x160?text=1P%20Gangster%20Hand" alt="1P with Gangster Tattoo"/>
     <div>1P (You)</div>
   </div>
   <div class="char-box">
-    <img src="https://via.placeholder.com/160x160/333/fff?text=CPU+BIG" alt="CPU Notorious B.I.G style" />
+    <img src="https://placehold.co/160x160?text=CPU%20BIG" alt="CPU Notorious B.I.G style"/>
     <div>CPU</div>
   </div>
 </div>
 
-<!-- ボタン -->
 <div class="buttons">
   <button id="rollButton">Roll Dice</button>
   <button id="resetButton" style="display:none;">Reset Game</button>
 </div>
 
-<!-- カウントダウンのオーバーレイ -->
 <div class="countdown-overlay" id="countdownOverlay"></div>
-
-<!-- 結果表示用 -->
 <div class="result-popup" id="finalResult"></div>
 
-<!-- 1) Three.js本体 (unpkgのバージョンを固定) -->
+<!-- (1) Three.js本体 -->
 <script src="https://unpkg.com/three@0.153.0/build/three.min.js"></script>
-<!-- 2) GLTFLoader (unpkgのexamples) -->
+<!-- (2) GLTFLoader (examples/js) -->
 <script src="https://unpkg.com/three@0.153.0/examples/js/loaders/GLTFLoader.js"></script>
-<!-- 3) メインスクリプト -->
+<!-- (3) 自作のゲームロジック -->
 <script>
-/* ======================
-  グローバル変数
-====================== */
 let scene, camera, renderer;
 let playerDice, cpuDice;
-let round = 1;
-let playerWins = 0;
-let cpuWins = 0;
-let rolling = false; // ロール中フラグ
-
+let round = 1, playerWins = 0, cpuWins = 0, rolling = false;
 const maxRounds = 3;
+
 const roundInfoEl = document.getElementById('roundInfo');
 const matchInfoEl = document.getElementById('matchInfo');
 const rollButton = document.getElementById('rollButton');
@@ -156,9 +129,6 @@ const resetButton = document.getElementById('resetButton');
 const countdownOverlay = document.getElementById('countdownOverlay');
 const finalResultEl = document.getElementById('finalResult');
 
-/* ======================
-  初期化
-====================== */
 initScene();
 animate();
 
@@ -171,21 +141,12 @@ rollButton.addEventListener('click', () => {
 });
 resetButton.addEventListener('click', resetGame);
 
-/* ======================
-  Three.js の初期設定
-====================== */
 function initScene() {
   scene = new THREE.Scene();
+  camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.1, 1000);
+  camera.position.set(0,3,10);
 
-  camera = new THREE.PerspectiveCamera(
-    60,
-    window.innerWidth / window.innerHeight,
-    0.1,
-    1000
-  );
-  camera.position.set(0, 3, 10);
-
-  renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer = new THREE.WebGLRenderer({ antialias:true });
   renderer.setSize(window.innerWidth, window.innerHeight);
   document.body.appendChild(renderer.domElement);
 
@@ -193,44 +154,34 @@ function initScene() {
   scene.add(ambientLight);
 
   const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-  directionalLight.position.set(5, 10, 5);
+  directionalLight.position.set(5,10,5);
   scene.add(directionalLight);
 
   scene.background = new THREE.Color(0x222222);
-
   window.addEventListener('resize', onWindowResize);
 
-  // =============== サイコロモデルを2つ読み込む (assets/dice.glb) ===============
+  // dice.glb を 2つ読み込む
   const loader = new THREE.GLTFLoader();
   loader.load('assets/dice.glb', (gltf) => {
-    // Player Dice
     playerDice = gltf.scene.clone(true);
-    playerDice.position.set(-2, 0, 0);
+    playerDice.position.set(-2,0,0);
     scene.add(playerDice);
 
-    // CPU Dice
     cpuDice = gltf.scene.clone(true);
-    cpuDice.position.set(2, 0, 0);
+    cpuDice.position.set(2,0,0);
     scene.add(cpuDice);
   });
 }
 
-/* ======================
-  ウィンドウリサイズ
-====================== */
 function onWindowResize() {
-  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.aspect = window.innerWidth/window.innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
 }
 
-/* ======================
-  メインループ
-====================== */
 function animate() {
   requestAnimationFrame(animate);
 
-  // サイコロ回転 (ロール中はクルクル回す演出用)
   if (rolling) {
     if (playerDice) {
       playerDice.rotation.x += 0.3;
@@ -245,56 +196,51 @@ function animate() {
   renderer.render(scene, camera);
 }
 
-/* ======================
-  カウントダウン演出
-====================== */
 function startCountdown(callback) {
   rolling = true;
-  let steps = ['3','2','1','GO!!'];
+  const steps = ['3','2','1','GO!!'];
   let index = 0;
   countdownOverlay.classList.add('show');
 
-  let interval = setInterval(() => {
+  const interval = setInterval(() => {
     countdownOverlay.textContent = steps[index];
     index++;
-    if(index >= steps.length) {
+    if (index >= steps.length) {
       clearInterval(interval);
       setTimeout(() => {
         countdownOverlay.classList.remove('show');
         countdownOverlay.textContent = '';
-        // カウントダウン終了後に実際のダイスロール処理
         callback();
       }, 500);
     }
   }, 700);
 }
 
-/* ======================
-  サイコロを振る
-====================== */
 function rollDice() {
-  // ダイスの出目を乱数で決定 (1~6)
-  let playerRoll = Math.floor(Math.random() * 6) + 1;
-  let cpuRoll = Math.floor(Math.random() * 6) + 1;
+  const playerRoll = Math.floor(Math.random()*6)+1;
+  const cpuRoll = Math.floor(Math.random()*6)+1;
 
-  // それっぽく見せるために、最終的にダイスをランダム角度で停止させる
+  // ランダムに回転停止
   if (playerDice) {
-    playerDice.rotation.x = Math.random() * Math.PI * 2;
-    playerDice.rotation.y = Math.random() * Math.PI * 2;
-    playerDice.rotation.z = Math.random() * Math.PI * 2;
+    playerDice.rotation.set(
+      Math.random()*Math.PI*2,
+      Math.random()*Math.PI*2,
+      Math.random()*Math.PI*2
+    );
   }
   if (cpuDice) {
-    cpuDice.rotation.x = Math.random() * Math.PI * 2;
-    cpuDice.rotation.y = Math.random() * Math.PI * 2;
-    cpuDice.rotation.z = Math.random() * Math.PI * 2;
+    cpuDice.rotation.set(
+      Math.random()*Math.PI*2,
+      Math.random()*Math.PI*2,
+      Math.random()*Math.PI*2
+    );
   }
 
-  // 勝敗判定
   let resultText = `You: ${playerRoll} vs CPU: ${cpuRoll} → `;
-  if(playerRoll > cpuRoll) {
+  if (playerRoll > cpuRoll) {
     playerWins++;
     resultText += 'You Win!';
-  } else if(cpuRoll > playerRoll) {
+  } else if (cpuRoll > playerRoll) {
     cpuWins++;
     resultText += 'You Lose...';
   } else {
@@ -306,26 +252,20 @@ function rollDice() {
   rolling = false;
 }
 
-/* ======================
-  ゲーム状態確認
-====================== */
 function checkGameStatus() {
   roundInfoEl.textContent = `Round: ${round}`;
 
-  if(playerWins === 2) {
-    // 1P先に2勝
+  if (playerWins === 2) {
     finalResultEl.textContent = 'WINNER';
     finalResultEl.classList.add('visible');
     endGame();
-  } else if(cpuWins === 2) {
-    // CPU先に2勝
+  } else if (cpuWins === 2) {
     finalResultEl.textContent = 'LOSER';
     finalResultEl.classList.add('visible');
     endGame();
   } else {
     round++;
-    if(round > maxRounds) {
-      // 全3回でどちらも2勝に届かない → 引き分け扱いなど
+    if (round > maxRounds) {
       finalResultEl.textContent = 'No Winner (Draw)';
       finalResultEl.classList.add('visible');
       endGame();
@@ -333,29 +273,23 @@ function checkGameStatus() {
   }
 }
 
-/* ======================
-  ゲーム終了処理
-====================== */
 function endGame() {
   rollButton.style.display = 'none';
   resetButton.style.display = 'inline-block';
 }
 
-/* ======================
-  リセット
-====================== */
 function resetGame() {
   round = 1;
   playerWins = 0;
   cpuWins = 0;
   rolling = false;
+
   roundInfoEl.textContent = 'Round: 1';
   matchInfoEl.textContent = 'Let\'s Roll!';
   finalResultEl.classList.remove('visible');
 
-  // サイコロの回転初期化
-  if(playerDice) playerDice.rotation.set(0,0,0);
-  if(cpuDice) cpuDice.rotation.set(0,0,0);
+  if (playerDice) playerDice.rotation.set(0,0,0);
+  if (cpuDice) cpuDice.rotation.set(0,0,0);
 
   rollButton.style.display = 'inline-block';
   resetButton.style.display = 'none';
