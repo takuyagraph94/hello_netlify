@@ -126,8 +126,6 @@
   <button id="resetButton" style="display:none;">Reset Game</button>
 </div>
 
-<!-- Three.jsが描画する領域 (canvas) はJS側で生成するのでここには書かない -->
-
 <!-- カウントダウンのオーバーレイ -->
 <div class="countdown-overlay" id="countdownOverlay"></div>
 
@@ -202,9 +200,9 @@ function initScene() {
 
   window.addEventListener('resize', onWindowResize);
 
-  // =============== サイコロモデルを2つ読み込む ===============
+  // =============== サイコロモデルを2つ読み込む (assets/dice.glb) ===============
   const loader = new THREE.GLTFLoader();
-  loader.load('dice.glb', (gltf) => {
+  loader.load('assets/dice.glb', (gltf) => {
     // Player Dice
     playerDice = gltf.scene.clone(true);
     playerDice.position.set(-2, 0, 0);
